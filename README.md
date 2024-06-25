@@ -1344,14 +1344,272 @@ node2_internal_ip = "10.10.4.27"
 
    б. Подготовить [ansible](https://www.ansible.com/) конфигурации, можно воспользоваться, например [Kubespray](https://kubernetes.io/docs/setup/production-environment/tools/kubespray/) 
 
+   * Перед запуском Kuberspray на виртуальных машинах нужно провести предварительные работы, которые будут выполненены с playbook в директории по ссылке:
+
+```bash
+ubuntu@instance-20240625-081433:~/netology_diplom_devops/ansible_prepare_kuberspray$ ansible-playbook -i inventory.yml set_hostname_and_update_hosts.yml
+
+PLAY [Set hostname and update /etc/hosts and template] ****************************************************************************************************************************************************************
+
+TASK [Gathering Facts] ************************************************************************************************************************************************************************************************
+ok: [node1]
+ok: [node2]
+ok: [cp]
+
+TASK [Set hostname on cp] *********************************************************************************************************************************************************************************************
+skipping: [node1]
+skipping: [node2]
+ok: [cp]
+
+TASK [Set hostname on node1] ******************************************************************************************************************************************************************************************
+skipping: [cp]
+skipping: [node2]
+ok: [node1]
+
+TASK [Set hostname on node2] ******************************************************************************************************************************************************************************************
+skipping: [cp]
+skipping: [node1]
+ok: [node2]
+
+TASK [Ensure /etc/hosts contains the necessary entries] ***************************************************************************************************************************************************************
+ok: [node2] => (item=10.10.1.10   k8smaster.example.net k8smaster)
+ok: [cp] => (item=10.10.1.10   k8smaster.example.net k8smaster)
+ok: [node1] => (item=10.10.1.10   k8smaster.example.net k8smaster)
+ok: [node2] => (item=10.10.2.31   k8sworker1.example.net k8sworker1)
+ok: [cp] => (item=10.10.2.31   k8sworker1.example.net k8sworker1)
+ok: [node1] => (item=10.10.2.31   k8sworker1.example.net k8sworker1)
+ok: [node2] => (item=10.10.4.27   k8sworker2.example.net k8sworker2)
+ok: [cp] => (item=10.10.4.27   k8sworker2.example.net k8sworker2)
+ok: [node1] => (item=10.10.4.27   k8sworker2.example.net k8sworker2)
+
+TASK [Ensure /etc/cloud/templates/hosts.debian.tmpl contains the necessary entries] ***********************************************************************************************************************************
+ok: [cp] => (item=10.10.1.10   k8smaster.example.net k8smaster)
+ok: [node2] => (item=10.10.1.10   k8smaster.example.net k8smaster)
+ok: [node1] => (item=10.10.1.10   k8smaster.example.net k8smaster)
+ok: [cp] => (item=10.10.2.31   k8sworker1.example.net k8sworker1)
+ok: [node2] => (item=10.10.2.31   k8sworker1.example.net k8sworker1)
+ok: [node1] => (item=10.10.2.31   k8sworker1.example.net k8sworker1)
+ok: [node2] => (item=10.10.4.27   k8sworker2.example.net k8sworker2)
+ok: [cp] => (item=10.10.4.27   k8sworker2.example.net k8sworker2)
+ok: [node1] => (item=10.10.4.27   k8sworker2.example.net k8sworker2)
+
+TASK [Reboot the server] **********************************************************************************************************************************************************************************************
+changed: [node2]
+changed: [cp]
+changed: [node1]
+
+PLAY RECAP ************************************************************************************************************************************************************************************************************
+cp                         : ok=5    changed=1    unreachable=0    failed=0    skipped=2    rescued=0    ignored=0   
+node1                      : ok=5    changed=1    unreachable=0    failed=0    skipped=2    rescued=0    ignored=0   
+node2                      : ok=5    changed=1    unreachable=0    failed=0    skipped=2    rescued=0    ignored=0 
+```
+
+```bash
+ubuntu@instance-20240625-081433:~/netology_diplom_devops/ansible_prepare_kuberspray$ ansible-playbook -i inventory.yml disable_swap_and_add_kernel_parameters.yml
+
+PLAY [Disable Swap & Add kernel Parameters] ***************************************************************************************************************************************************************************
+
+TASK [Gathering Facts] ************************************************************************************************************************************************************************************************
+ok: [node2]
+ok: [cp]
+ok: [node1]
+
+TASK [Disable swap] ***************************************************************************************************************************************************************************************************
+changed: [cp]
+changed: [node2]
+changed: [node1]
+
+TASK [Comment out swap entry in /etc/fstab] ***************************************************************************************************************************************************************************
+changed: [node2]
+changed: [node1]
+changed: [cp]
+
+TASK [Create containerd modules-load configuration] *******************************************************************************************************************************************************************
+changed: [cp]
+changed: [node2]
+changed: [node1]
+
+TASK [Load overlay module] ********************************************************************************************************************************************************************************************
+changed: [cp]
+changed: [node2]
+changed: [node1]
+
+TASK [Load br_netfilter module] ***************************************************************************************************************************************************************************************
+changed: [cp]
+changed: [node2]
+changed: [node1]
+
+TASK [Check if Kubernetes sysctl configuration file exists] ***********************************************************************************************************************************************************
+ok: [cp]
+ok: [node2]
+ok: [node1]
+
+TASK [Set Kubernetes kernel parameters] *******************************************************************************************************************************************************************************
+changed: [cp]
+changed: [node2]
+changed: [node1]
+
+TASK [Reload sysctl settings] *****************************************************************************************************************************************************************************************
+changed: [node2]
+changed: [cp]
+changed: [node1]
+
+PLAY RECAP ************************************************************************************************************************************************************************************************************
+cp                         : ok=9    changed=7    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+node1                      : ok=9    changed=7    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0 
+```
+
+Дальнейшие действия выполняются с помощью Kuberspray.
+Для этого необходимо склонировать репозиторий https://github.com/kubernetes-sigs/kubespray.git
+
+Преварительно выполнить команды:
+
+```bash
+VENVDIR=kubespray-venv
+KUBESPRAYDIR=kubespray
+python3 -m venv $VENVDIR
+source $VENVDIR/bin/activate
+cd $KUBESPRAYDIR
+pip install -U -r requirements.txt
+```
+
+Далее выполняем команду:
+
+```bash
+cp -rfp inventory/sample inventory/mycluster
+```
+
+Далее выполняем команды:
+
+```bash
+declare -a IPS=(178.154.204.61 158.160.66.183 158.160.137.231)
+CONFIG_FILE=inventory/mycluster/hosts.yaml python3 contrib/inventory_builder/inventory.py ${IPS[@]}
+```
+
+Правим полученный файл под нужды текущей задачи /home/ubuntu/netology_diplom_devops/kubespray/inventory/mycluster/hosts.yaml
+
+```bash
+all:
+  hosts:
+    cp1:
+      ansible_host: 178.154.204.61
+      ip: 10.10.1.10
+    node1:
+      ansible_host: 158.160.66.183
+      ip: 10.10.2.31
+    node2:
+      ansible_host: 158.160.137.231
+      ip: 10.10.4.27
+  children:
+    kube_control_plane:
+      hosts:
+        cp1:
+    kube_node:
+      hosts:
+        node1:
+        node2:
+    etcd:
+      hosts:
+        cp1:
+    k8s_cluster:
+      children:
+        kube_control_plane:
+        kube_node:
+    calico_rr:
+      hosts: {}
+```
+
+Прописываем пользователя для доступа к нодам в начале файла /home/ubuntu/netology_diplom_devops/kubespray/inventory/mycluster/group_vars/all/all.yml
+
+Для доступа к кластеру извне нужно добавить параметр supplementary_addresses_in_ssl_keys: [178.154.204.61] в файл inventory/mycluster/group_vars/k8s_cluster/k8s-cluster.yml, что является ip мастер ноды.
+
+И далее запускаем установку Kubernetes командой:
+
+```bash
+ansible-playbook -i inventory/mycluster/hosts.yaml  --become --become-user=root cluster.yml
+```
+
+Результат выполнения:
+
+```bash
+PLAY RECAP ************************************************************************************************************************************************************************************************************
+cp1                        : ok=632  changed=140  unreachable=0    failed=0    skipped=1112 rescued=0    ignored=6   
+node1                      : ok=416  changed=87   unreachable=0    failed=0    skipped=672  rescued=0    ignored=1   
+node2                      : ok=416  changed=87   unreachable=0    failed=0    skipped=668  rescued=0    ignored=1   
+```
 
    в. Задеплоить Kubernetes на подготовленные ранее инстансы, в случае нехватки каких-либо ресурсов вы всегда можете создать их при помощи Terraform.
+
+   Для работы с кластером необходимо на локальной машине установить kubectl.
+   Копируем ~/.kube/config с мастер ноды командой:
+```bash
+mkdir -p ~/.kube && ssh admin@178.154.204.61 "sudo cat /root/.kube/config" >> ~/.kube/config
+```
+
+Получаем файл такого вида:
+
+```bash
+apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority-data: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURCVENDQWUyZ0F3SUJBZ0lJVUJGZ0x3ZWlvU293RFFZSktvWklodmNOQVFFTEJRQXdGVEVUTUJFR0ExVUUKQXhNS2EzVmlaWEp1WlhSbGN6QWVGdzB5TkRBMk1qVXhNVEl3TkRsYUZ3MHpOREEyTWpNeE1USTFORGxhTUJVeApFekFSQmdOVkJBTVRDbXQxWW1WeWJtVjBaWE13Z2dFaU1BMEdDU3FHU0liM0RRRUJBUVVBQTRJQkR3QXdnZ0VLCkFvSUJBUUQwb0dzOVNkQnJKVklRZTZMa3k1L2o3VTkxZ3p0ZnphTkd3K3YzVFhCRlBuaU14VERkVjNTZEMxYWIKYzNjQlp0ZkhwMFVnWWZ0Vy9WWEFQdkF6cWtzV1Y0dmZoYzNadnNRWnc0cTZwYzkvUEFaRE53MTFFZVNrd1RmagpqUkxCTlY2dG5qMmpPQ1U4MEJBM2dTRVFxdm81dEFGdEgzWDFPSXJTMFVMYW96cmVBeUZObUpoOTdFUE9nMCs1Cm5aQXBhby9PelZGMWwzSXR4eWljTkFyTDloSkJIamthR1RqVDJPdUlHTTN4THVoQ3RKYko0VE4xL2NLTzhXaGMKaFV6UHAwbVFPOThKSEdpb25ralRzVmdjRlJFVEYwMUd3aE1ULzBGSlFLcXNVb21DRXhSQ0hJcFBvcmgzUVZRdgplWTN0QjNMZlcySkJ1S09pL1MxdmJvYnpwTHd6QWdNQkFBR2pXVEJYTUE0R0ExVWREd0VCL3dRRUF3SUNwREFQCkJnTlZIUk1CQWY4RUJUQURBUUgvTUIwR0ExVWREZ1FXQkJSYklsc3c5ai9tYTVWT2tGMlpqREt6RWY3dExEQVYKQmdOVkhSRUVEakFNZ2dwcmRXSmxjbTVsZEdWek1BMEdDU3FHU0liM0RRRUJDd1VBQTRJQkFRQjBYdE5heTlQVgpiY3dvWDZ3R3lmZ2duS1h6SEljVjRkM3NtWFBHWlRnSEV3NGtxeFlZd0o0UGJIWUFNeHhnN1Jxa1BKZlIyelZaClRseVVJbm83SUkyeEtzb0NOUzZ3TlJGME1neG9vTjdDa0JIcDA5dUJ4czZOdGd2VUhjZGs4NEtsaVMwb1NYWGUKVS9MVzgrcGVGako4aEgvellveWp6OFh0RmQvb0F1QVNtbW9Vbk8wdHUvZHJqMGFIOVFSYTMxQ0g0L1QrZXM2awo0SG5CTXY1KzkrRm1zcmdQcVhyUDVtczcxYVZlelpSelAzYTNwdXM0VStnZHlaRzNYaDlhR01FVHpGNzVDS2h1CmVRUEc5cmEwaDcrU292cXlZOUxuV1ROMXRJWnVUalFyZnFVdGt1M251bjFFOWx4MHZNN1ZNcUdUZTBQcE51b0sKTm94ejNFWEhVem1UCi0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
+    server: https://127.0.0.1:6443
+  name: cluster.local
+contexts:
+- context:
+    cluster: cluster.local
+    user: kubernetes-admin
+  name: kubernetes-admin@cluster.local
+current-context: kubernetes-admin@cluster.local
+kind: Config
+preferences: {}
+users:
+- name: kubernetes-admin
+  user:
+    client-certificate-data: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURLVENDQWhHZ0F3SUJBZ0lJTE5uVnhkSTB1WVV3RFFZSktvWklodmNOQVFFTEJRQXdGVEVUTUJFR0ExVUUKQXhNS2EzVmlaWEp1WlhSbGN6QWVGdzB5TkRBMk1qVXhNVEl3TkR
+    client-key-data: LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlFb3dJQkFBS0NBUUVBNWdpVVdiQ1BCc01IOVB5T2xhZ1QyNS96N1hkQlJYY1NLNWZBSUNJc0w5RGZvNzcwCkxkbk1xeElrTlE5UFRwTS95QlExQ2k4Mi9uelpCQ3ZBbW9
+```
+Заменяем ip на внешний ip мастер ноды:
+
+```bash
+https://178.154.204.61:6443
+```
 
 Ожидаемый результат:
 
 1. Работоспособный Kubernetes кластер.
 2. В файле `~/.kube/config` находятся данные для доступа к кластеру.
 3. Команда `kubectl get pods --all-namespaces` отрабатывает без ошибок.
+
+Класер создан, доступно подключение через интернет.
+
+```bash
+ubuntu@instance-20240625-081433:~$ kubectl get pods --all-namespaces
+NAMESPACE     NAME                                       READY   STATUS    RESTARTS      AGE
+kube-system   calico-kube-controllers-68485cbf9c-rxzrw   1/1     Running   0             24m
+kube-system   calico-node-bghpx                          1/1     Running   0             25m
+kube-system   calico-node-pdnkz                          1/1     Running   0             25m
+kube-system   calico-node-qvlfm                          1/1     Running   0             25m
+kube-system   coredns-69db55dd76-548sw                   1/1     Running   0             22m
+kube-system   coredns-69db55dd76-qn8bv                   1/1     Running   0             22m
+kube-system   dns-autoscaler-6f4b597d8c-5q85z            1/1     Running   0             22m
+kube-system   kube-apiserver-cp1                         1/1     Running   2 (21m ago)   28m
+kube-system   kube-controller-manager-cp1                1/1     Running   3 (21m ago)   28m
+kube-system   kube-proxy-n6v4h                           1/1     Running   0             27m
+kube-system   kube-proxy-v9zqb                           1/1     Running   0             27m
+kube-system   kube-proxy-zv7pj                           1/1     Running   0             27m
+kube-system   kube-scheduler-cp1                         1/1     Running   3 (21m ago)   28m
+kube-system   nginx-proxy-node1                          1/1     Running   0             27m
+kube-system   nginx-proxy-node2                          1/1     Running   0             27m
+kube-system   nodelocaldns-2t52j                         1/1     Running   0             22m
+kube-system   nodelocaldns-4nkn7                         1/1     Running   0             22m
+kube-system   nodelocaldns-6gs5k                         1/1     Running   0             22m
+ubuntu@instance-20240625-081433:~$ kubectl get nodes
+NAME    STATUS   ROLES           AGE   VERSION
+cp1     Ready    control-plane   28m   v1.29.5
+node1   Ready    <none>          27m   v1.29.5
+node2   Ready    <none>          27m   v1.29.5
+```
 
 ---
 ### Создание тестового приложения

@@ -1,0 +1,51 @@
+---
+- name: Set hostname and update /etc/hosts and template
+  hosts: all
+  become: true
+  vars:
+    cp_hostname: "k8smaster.example.net"
+    node1_hostname: "k8sworker1.example.net"
+    node2_hostname: "k8sworker2.example.net"
+    cp_internal_ip: "10.10.1.10"
+    node1_internal_ip: "10.10.2.31"
+    node2_internal_ip: "10.10.4.27"
+
+  tasks:
+    - name: Set hostname on cp
+      hostname:
+        name: "{{ cp_hostname }}"
+      when: inventory_hostname == 'cp'
+
+    - name: Set hostname on node1
+      hostname:
+        name: "{{ node1_hostname }}"
+      when: inventory_hostname == 'node1'
+
+    - name: Set hostname on node2
+      hostname:
+        name: "{{ node2_hostname }}"
+      when: inventory_hostname == 'node2'
+
+    - name: Ensure /etc/hosts contains the necessary entries
+      lineinfile:
+        path: /etc/hosts
+        state: present
+        line: "{{ item }}"
+      loop:
+        - "{{ cp_internal_ip }}   {{ cp_hostname }} k8smaster"
+        - "{{ node1_internal_ip }}   {{ node1_hostname }} k8sworker1"
+        - "{{ node2_internal_ip }}   {{ node2_hostname }} k8sworker2"
+
+    - name: Ensure /etc/cloud/templates/hosts.debian.tmpl contains the necessary entries
+      lineinfile:
+        path: /etc/cloud/templates/hosts.debian.tmpl
+        state: present
+        line: "{{ item }}"
+      loop:
+        - "{{ cp_internal_ip }}   {{ cp_hostname }} k8smaster"
+        - "{{ node1_internal_ip }}   {{ node1_hostname }} k8sworker1"
+        - "{{ node2_internal_ip }}   {{ node2_hostname }} k8sworker2"
+
+    - name: Reboot the server
+      reboot:
+      when: inventory_hostname in ['cp', 'node1', 'node2']

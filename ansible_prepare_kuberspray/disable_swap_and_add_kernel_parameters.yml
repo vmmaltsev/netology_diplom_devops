@@ -1,0 +1,56 @@
+---
+- name: Disable Swap & Add kernel Parameters
+  hosts: all
+  become: true
+  tasks:
+
+    - name: Disable swap
+      command: swapoff -a
+      become: true
+
+    - name: Comment out swap entry in /etc/fstab
+      lineinfile:
+        path: /etc/fstab
+        regexp: '\sswap\s'
+        line: '#\1'
+        state: present
+      become: true
+
+    - name: Create containerd modules-load configuration
+      copy:
+        dest: /etc/modules-load.d/containerd.conf
+        content: |
+          overlay
+          br_netfilter
+      become: true
+
+    - name: Load overlay module
+      modprobe:
+        name: overlay
+        state: present
+      become: true
+
+    - name: Load br_netfilter module
+      modprobe:
+        name: br_netfilter
+        state: present
+      become: true
+
+    - name: Check if Kubernetes sysctl configuration file exists
+      stat:
+        path: /etc/sysctl.d/kubernetes.conf
+      register: kubernetes_conf
+
+    - name: Set Kubernetes kernel parameters
+      copy:
+        dest: /etc/sysctl.d/kubernetes.conf
+        content: |
+          net.bridge.bridge-nf-call-ip6tables = 1
+          net.bridge.bridge-nf-call-iptables = 1
+          net.ipv4.ip_forward = 1
+      become: true
+      when: not kubernetes_conf.stat.exists
+
+    - name: Reload sysctl settings
+      command: sysctl --system
+      become: true
