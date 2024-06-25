@@ -112,7 +112,7 @@ key_algorithm: RSA_2048
 
  * С помощью Terraform создан бакет S3
   
-   Конфигурационные файлы расположены в директории по ссылке: 
+   Конфигурационные файлы расположены в директории по ссылке: https://github.com/vmmaltsev/netology_diplom_devops/tree/main/terraform_bucket
 
 ```bash
 ubuntu@instance-20240625-081433:~/netology_diplom_devops/terraform_bucket$ terraform init
@@ -296,8 +296,251 @@ service_account_access_key = <sensitive>
 service_account_secret_key = <sensitive>
 ```
 
-1. Создайте VPC с подсетями в разных зонах доступности.
-2. Убедитесь, что теперь вы можете выполнить команды `terraform destroy` и `terraform apply` без дополнительных ручных действий.
+3. Создайте VPC с подсетями в разных зонах доступности.
+
+Результаты выполнения:
+
+ * С помощью Terraform создана VPC и подсети во всех зонах доступности, при этом используется backend в бакете. Для этого необходимо предварительно выгрузить ключи, которые созданы при создании бакета, а также сохранены с помощью файла outputs.tf.
+  Для этого необходимо использовать команды:
+
+```bash
+terraform output service_account_access_key
+terraform output service_account_secret_key
+```
+  
+   Конфигурационные файлы расположены в директории по ссылке: https://github.com/vmmaltsev/netology_diplom_devops/tree/main/terraform_project
+
+```bash
+ubuntu@instance-20240625-081433:~/netology_diplom_devops/terraform_project$ terraform init
+
+Initializing the backend...
+
+Successfully configured the backend "s3"! Terraform will automatically
+use this backend unless the backend configuration changes.
+
+Initializing provider plugins...
+- Finding yandex-cloud/yandex versions matching "0.117.0"...
+- Installing yandex-cloud/yandex v0.117.0...
+- Installed yandex-cloud/yandex v0.117.0 (self-signed, key ID E40F590B50BB8E40)
+
+Partner and community providers are signed by their developers.
+If you'd like to know more about provider signing, you can read about it here:
+https://www.terraform.io/docs/cli/plugins/signing.html
+
+Terraform has created a lock file .terraform.lock.hcl to record the provider
+selections it made above. Include this file in your version control repository
+so that Terraform can guarantee to make the same selections by default when
+you run "terraform init" in the future.
+
+Terraform has been successfully initialized!
+
+You may now begin working with Terraform. Try running "terraform plan" to see
+any changes that are required for your infrastructure. All Terraform commands
+should now work.
+
+If you ever set or change modules or backend configuration for Terraform,
+rerun this command to reinitialize your working directory. If you forget, other
+commands will detect it and remind you to do so if necessary.
+```
+
+```bash
+ubuntu@instance-20240625-081433:~/netology_diplom_devops/terraform_project$ terraform plan
+
+Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # yandex_vpc_network.netology_diplom will be created
+  + resource "yandex_vpc_network" "netology_diplom" {
+      + created_at                = (known after apply)
+      + default_security_group_id = (known after apply)
+      + description               = "VPC network for Netology diplom project"
+      + folder_id                 = (known after apply)
+      + id                        = (known after apply)
+      + labels                    = (known after apply)
+      + name                      = "netology-diplom"
+      + subnet_ids                = (known after apply)
+    }
+
+  # yandex_vpc_subnet.subnet_a will be created
+  + resource "yandex_vpc_subnet" "subnet_a" {
+      + created_at     = (known after apply)
+      + description    = "Subnet A in zone ru-central1-a"
+      + folder_id      = (known after apply)
+      + id             = (known after apply)
+      + labels         = (known after apply)
+      + name           = "subnet-a"
+      + network_id     = (known after apply)
+      + v4_cidr_blocks = [
+          + "10.10.1.0/24",
+        ]
+      + v6_cidr_blocks = (known after apply)
+      + zone           = "ru-central1-a"
+    }
+
+  # yandex_vpc_subnet.subnet_b will be created
+  + resource "yandex_vpc_subnet" "subnet_b" {
+      + created_at     = (known after apply)
+      + description    = "Subnet B in zone ru-central1-b"
+      + folder_id      = (known after apply)
+      + id             = (known after apply)
+      + labels         = (known after apply)
+      + name           = "subnet-b"
+      + network_id     = (known after apply)
+      + v4_cidr_blocks = [
+          + "10.10.2.0/24",
+        ]
+      + v6_cidr_blocks = (known after apply)
+      + zone           = "ru-central1-b"
+    }
+
+  # yandex_vpc_subnet.subnet_c will be created
+  + resource "yandex_vpc_subnet" "subnet_c" {
+      + created_at     = (known after apply)
+      + description    = "Subnet C in zone ru-central1-c"
+      + folder_id      = (known after apply)
+      + id             = (known after apply)
+      + labels         = (known after apply)
+      + name           = "subnet-c"
+      + network_id     = (known after apply)
+      + v4_cidr_blocks = [
+          + "10.10.3.0/24",
+        ]
+      + v6_cidr_blocks = (known after apply)
+      + zone           = "ru-central1-c"
+    }
+
+  # yandex_vpc_subnet.subnet_d will be created
+  + resource "yandex_vpc_subnet" "subnet_d" {
+      + created_at     = (known after apply)
+      + description    = "Subnet D in zone ru-central1-d"
+      + folder_id      = (known after apply)
+      + id             = (known after apply)
+      + labels         = (known after apply)
+      + name           = "subnet-d"
+      + network_id     = (known after apply)
+      + v4_cidr_blocks = [
+          + "10.10.4.0/24",
+        ]
+      + v6_cidr_blocks = (known after apply)
+      + zone           = "ru-central1-d"
+    }
+
+Plan: 5 to add, 0 to change, 0 to destroy.
+
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+Note: You didn't use the -out option to save this plan, so Terraform can't guarantee to take exactly these actions if you run "terraform apply" now.
+```
+
+```bash
+ubuntu@instance-20240625-081433:~/netology_diplom_devops/terraform_project$ terraform apply
+
+Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # yandex_vpc_network.netology_diplom will be created
+  + resource "yandex_vpc_network" "netology_diplom" {
+      + created_at                = (known after apply)
+      + default_security_group_id = (known after apply)
+      + description               = "VPC network for Netology diplom project"
+      + folder_id                 = (known after apply)
+      + id                        = (known after apply)
+      + labels                    = (known after apply)
+      + name                      = "netology-diplom"
+      + subnet_ids                = (known after apply)
+    }
+
+  # yandex_vpc_subnet.subnet_a will be created
+  + resource "yandex_vpc_subnet" "subnet_a" {
+      + created_at     = (known after apply)
+      + description    = "Subnet A in zone ru-central1-a"
+      + folder_id      = (known after apply)
+      + id             = (known after apply)
+      + labels         = (known after apply)
+      + name           = "subnet-a"
+      + network_id     = (known after apply)
+      + v4_cidr_blocks = [
+          + "10.10.1.0/24",
+        ]
+      + v6_cidr_blocks = (known after apply)
+      + zone           = "ru-central1-a"
+    }
+
+  # yandex_vpc_subnet.subnet_b will be created
+  + resource "yandex_vpc_subnet" "subnet_b" {
+      + created_at     = (known after apply)
+      + description    = "Subnet B in zone ru-central1-b"
+      + folder_id      = (known after apply)
+      + id             = (known after apply)
+      + labels         = (known after apply)
+      + name           = "subnet-b"
+      + network_id     = (known after apply)
+      + v4_cidr_blocks = [
+          + "10.10.2.0/24",
+        ]
+      + v6_cidr_blocks = (known after apply)
+      + zone           = "ru-central1-b"
+    }
+
+  # yandex_vpc_subnet.subnet_c will be created
+  + resource "yandex_vpc_subnet" "subnet_c" {
+      + created_at     = (known after apply)
+      + description    = "Subnet C in zone ru-central1-c"
+      + folder_id      = (known after apply)
+      + id             = (known after apply)
+      + labels         = (known after apply)
+      + name           = "subnet-c"
+      + network_id     = (known after apply)
+      + v4_cidr_blocks = [
+          + "10.10.3.0/24",
+        ]
+      + v6_cidr_blocks = (known after apply)
+      + zone           = "ru-central1-c"
+    }
+
+  # yandex_vpc_subnet.subnet_d will be created
+  + resource "yandex_vpc_subnet" "subnet_d" {
+      + created_at     = (known after apply)
+      + description    = "Subnet D in zone ru-central1-d"
+      + folder_id      = (known after apply)
+      + id             = (known after apply)
+      + labels         = (known after apply)
+      + name           = "subnet-d"
+      + network_id     = (known after apply)
+      + v4_cidr_blocks = [
+          + "10.10.4.0/24",
+        ]
+      + v6_cidr_blocks = (known after apply)
+      + zone           = "ru-central1-d"
+    }
+
+Plan: 5 to add, 0 to change, 0 to destroy.
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+yandex_vpc_network.netology_diplom: Creating...
+yandex_vpc_network.netology_diplom: Creation complete after 5s [id=enpk35ur92q1pfkagfnf]
+yandex_vpc_subnet.subnet_c: Creating...
+yandex_vpc_subnet.subnet_b: Creating...
+yandex_vpc_subnet.subnet_d: Creating...
+yandex_vpc_subnet.subnet_a: Creating...
+yandex_vpc_subnet.subnet_c: Creation complete after 0s [id=b0cuqrsdt8o1ujtle72o]
+yandex_vpc_subnet.subnet_b: Creation complete after 1s [id=e2ldr27ng5v9deejvlk0]
+yandex_vpc_subnet.subnet_a: Creation complete after 1s [id=e9bm59g22peq0vq2aeu7]
+yandex_vpc_subnet.subnet_d: Creation complete after 2s [id=fl8cfru5saenm9a6ggra]
+
+Apply complete! Resources: 5 added, 0 changed, 0 destroyed.
+```
+
+1. Убедитесь, что теперь вы можете выполнить команды `terraform destroy` и `terraform apply` без дополнительных ручных действий.
 
 Ожидаемые результаты:
 
