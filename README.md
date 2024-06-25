@@ -540,12 +540,240 @@ yandex_vpc_subnet.subnet_d: Creation complete after 2s [id=fl8cfru5saenm9a6ggra]
 Apply complete! Resources: 5 added, 0 changed, 0 destroyed.
 ```
 
-1. Убедитесь, что теперь вы можете выполнить команды `terraform destroy` и `terraform apply` без дополнительных ручных действий.
+4. Убедитесь, что теперь вы можете выполнить команды `terraform destroy` и `terraform apply` без дополнительных ручных действий.
+
+   В результате destroy и apply проодит без дополнительных действий.
+
+```bash
+ubuntu@instance-20240625-081433:~/netology_diplom_devops/terraform_project$ terraform destroy
+yandex_vpc_network.netology_diplom: Refreshing state... [id=enpk35ur92q1pfkagfnf]
+yandex_vpc_subnet.subnet_a: Refreshing state... [id=e9bm59g22peq0vq2aeu7]
+yandex_vpc_subnet.subnet_c: Refreshing state... [id=b0cuqrsdt8o1ujtle72o]
+yandex_vpc_subnet.subnet_d: Refreshing state... [id=fl8cfru5saenm9a6ggra]
+yandex_vpc_subnet.subnet_b: Refreshing state... [id=e2ldr27ng5v9deejvlk0]
+
+Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
+  - destroy
+
+Terraform will perform the following actions:
+
+  # yandex_vpc_network.netology_diplom will be destroyed
+  - resource "yandex_vpc_network" "netology_diplom" {
+      - created_at                = "2024-06-25T09:44:50Z" -> null
+      - default_security_group_id = "enpiore39ke42ghdl2fp" -> null
+      - description               = "VPC network for Netology diplom project" -> null
+      - folder_id                 = "b1guke85m20c3oiopip5" -> null
+      - id                        = "enpk35ur92q1pfkagfnf" -> null
+      - labels                    = {} -> null
+      - name                      = "netology-diplom" -> null
+      - subnet_ids                = [
+          - "b0cuqrsdt8o1ujtle72o",
+          - "e2ldr27ng5v9deejvlk0",
+          - "e9bm59g22peq0vq2aeu7",
+          - "fl8cfru5saenm9a6ggra",
+        ] -> null
+    }
+
+  # yandex_vpc_subnet.subnet_a will be destroyed
+  - resource "yandex_vpc_subnet" "subnet_a" {
+      - created_at     = "2024-06-25T09:44:52Z" -> null
+      - description    = "Subnet A in zone ru-central1-a" -> null
+      - folder_id      = "b1guke85m20c3oiopip5" -> null
+      - id             = "e9bm59g22peq0vq2aeu7" -> null
+      - labels         = {} -> null
+      - name           = "subnet-a" -> null
+      - network_id     = "enpk35ur92q1pfkagfnf" -> null
+      - v4_cidr_blocks = [
+          - "10.10.1.0/24",
+        ] -> null
+      - v6_cidr_blocks = [] -> null
+      - zone           = "ru-central1-a" -> null
+        # (1 unchanged attribute hidden)
+    }
+
+  # yandex_vpc_subnet.subnet_b will be destroyed
+  - resource "yandex_vpc_subnet" "subnet_b" {
+      - created_at     = "2024-06-25T09:44:52Z" -> null
+      - description    = "Subnet B in zone ru-central1-b" -> null
+      - folder_id      = "b1guke85m20c3oiopip5" -> null
+      - id             = "e2ldr27ng5v9deejvlk0" -> null
+      - labels         = {} -> null
+      - name           = "subnet-b" -> null
+      - network_id     = "enpk35ur92q1pfkagfnf" -> null
+      - v4_cidr_blocks = [
+          - "10.10.2.0/24",
+        ] -> null
+      - v6_cidr_blocks = [] -> null
+      - zone           = "ru-central1-b" -> null
+        # (1 unchanged attribute hidden)
+    }
+
+  # yandex_vpc_subnet.subnet_c will be destroyed
+  - resource "yandex_vpc_subnet" "subnet_c" {
+      - created_at     = "2024-06-25T09:44:52Z" -> null
+      - description    = "Subnet C in zone ru-central1-c" -> null
+      - folder_id      = "b1guke85m20c3oiopip5" -> null
+      - id             = "b0cuqrsdt8o1ujtle72o" -> null
+      - labels         = {} -> null
+      - name           = "subnet-c" -> null
+      - network_id     = "enpk35ur92q1pfkagfnf" -> null
+      - v4_cidr_blocks = [
+          - "10.10.3.0/24",
+        ] -> null
+      - v6_cidr_blocks = [] -> null
+      - zone           = "ru-central1-c" -> null
+        # (1 unchanged attribute hidden)
+    }
+
+  # yandex_vpc_subnet.subnet_d will be destroyed
+  - resource "yandex_vpc_subnet" "subnet_d" {
+      - created_at     = "2024-06-25T09:44:53Z" -> null
+      - description    = "Subnet D in zone ru-central1-d" -> null
+      - folder_id      = "b1guke85m20c3oiopip5" -> null
+      - id             = "fl8cfru5saenm9a6ggra" -> null
+      - labels         = {} -> null
+      - name           = "subnet-d" -> null
+      - network_id     = "enpk35ur92q1pfkagfnf" -> null
+      - v4_cidr_blocks = [
+          - "10.10.4.0/24",
+        ] -> null
+      - v6_cidr_blocks = [] -> null
+      - zone           = "ru-central1-d" -> null
+        # (1 unchanged attribute hidden)
+    }
+
+Plan: 0 to add, 0 to change, 5 to destroy.
+
+Do you really want to destroy all resources?
+  Terraform will destroy all your managed infrastructure, as shown above.
+  There is no undo. Only 'yes' will be accepted to confirm.
+
+  Enter a value: yes
+
+yandex_vpc_subnet.subnet_b: Destroying... [id=e2ldr27ng5v9deejvlk0]
+yandex_vpc_subnet.subnet_c: Destroying... [id=b0cuqrsdt8o1ujtle72o]
+yandex_vpc_subnet.subnet_a: Destroying... [id=e9bm59g22peq0vq2aeu7]
+yandex_vpc_subnet.subnet_d: Destroying... [id=fl8cfru5saenm9a6ggra]
+yandex_vpc_subnet.subnet_d: Destruction complete after 2s
+yandex_vpc_subnet.subnet_a: Destruction complete after 2s
+yandex_vpc_subnet.subnet_b: Destruction complete after 2s
+yandex_vpc_subnet.subnet_c: Destruction complete after 3s
+yandex_vpc_network.netology_diplom: Destroying... [id=enpk35ur92q1pfkagfnf]
+yandex_vpc_network.netology_diplom: Destruction complete after 1s
+
+Destroy complete! Resources: 5 destroyed.
+ubuntu@instance-20240625-081433:~/netology_diplom_devops/terraform_project$ terraform apply
+
+Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # yandex_vpc_network.netology_diplom will be created
+  + resource "yandex_vpc_network" "netology_diplom" {
+      + created_at                = (known after apply)
+      + default_security_group_id = (known after apply)
+      + description               = "VPC network for Netology diplom project"
+      + folder_id                 = (known after apply)
+      + id                        = (known after apply)
+      + labels                    = (known after apply)
+      + name                      = "netology-diplom"
+      + subnet_ids                = (known after apply)
+    }
+
+  # yandex_vpc_subnet.subnet_a will be created
+  + resource "yandex_vpc_subnet" "subnet_a" {
+      + created_at     = (known after apply)
+      + description    = "Subnet A in zone ru-central1-a"
+      + folder_id      = (known after apply)
+      + id             = (known after apply)
+      + labels         = (known after apply)
+      + name           = "subnet-a"
+      + network_id     = (known after apply)
+      + v4_cidr_blocks = [
+          + "10.10.1.0/24",
+        ]
+      + v6_cidr_blocks = (known after apply)
+      + zone           = "ru-central1-a"
+    }
+
+  # yandex_vpc_subnet.subnet_b will be created
+  + resource "yandex_vpc_subnet" "subnet_b" {
+      + created_at     = (known after apply)
+      + description    = "Subnet B in zone ru-central1-b"
+      + folder_id      = (known after apply)
+      + id             = (known after apply)
+      + labels         = (known after apply)
+      + name           = "subnet-b"
+      + network_id     = (known after apply)
+      + v4_cidr_blocks = [
+          + "10.10.2.0/24",
+        ]
+      + v6_cidr_blocks = (known after apply)
+      + zone           = "ru-central1-b"
+    }
+
+  # yandex_vpc_subnet.subnet_c will be created
+  + resource "yandex_vpc_subnet" "subnet_c" {
+      + created_at     = (known after apply)
+      + description    = "Subnet C in zone ru-central1-c"
+      + folder_id      = (known after apply)
+      + id             = (known after apply)
+      + labels         = (known after apply)
+      + name           = "subnet-c"
+      + network_id     = (known after apply)
+      + v4_cidr_blocks = [
+          + "10.10.3.0/24",
+        ]
+      + v6_cidr_blocks = (known after apply)
+      + zone           = "ru-central1-c"
+    }
+
+  # yandex_vpc_subnet.subnet_d will be created
+  + resource "yandex_vpc_subnet" "subnet_d" {
+      + created_at     = (known after apply)
+      + description    = "Subnet D in zone ru-central1-d"
+      + folder_id      = (known after apply)
+      + id             = (known after apply)
+      + labels         = (known after apply)
+      + name           = "subnet-d"
+      + network_id     = (known after apply)
+      + v4_cidr_blocks = [
+          + "10.10.4.0/24",
+        ]
+      + v6_cidr_blocks = (known after apply)
+      + zone           = "ru-central1-d"
+    }
+
+Plan: 5 to add, 0 to change, 0 to destroy.
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+yandex_vpc_network.netology_diplom: Creating...
+yandex_vpc_network.netology_diplom: Creation complete after 4s [id=enpm3e7mp0alc2v079b9]
+yandex_vpc_subnet.subnet_d: Creating...
+yandex_vpc_subnet.subnet_a: Creating...
+yandex_vpc_subnet.subnet_b: Creating...
+yandex_vpc_subnet.subnet_c: Creating...
+yandex_vpc_subnet.subnet_b: Creation complete after 0s [id=e2ld7je9e0fhgrvgf4f7]
+yandex_vpc_subnet.subnet_c: Creation complete after 1s [id=b0cn7s1mjcltcqjgeusa]
+yandex_vpc_subnet.subnet_d: Creation complete after 1s [id=fl8j2p6r9i7m28lvru14]
+yandex_vpc_subnet.subnet_a: Creation complete after 2s [id=e9b11it1nfb2063agnml]
+
+Apply complete! Resources: 5 added, 0 changed, 0 destroyed.
+```
 
 Ожидаемые результаты:
 
 1. Terraform сконфигурирован и создание инфраструктуры посредством Terraform возможно без дополнительных ручных действий.
+   Terraform сконфигурирован
+
 2. Полученная конфигурация инфраструктуры является предварительной, поэтому в ходе дальнейшего выполнения задания возможны изменения.
+   Получена предварительная конфигурация из сети и подсетей во всех зонах доступности
 
 ---
 ### Создание Kubernetes кластера
