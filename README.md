@@ -107,8 +107,197 @@ key_algorithm: RSA_2048
 
 2. Подготовьте [backend](https://www.terraform.io/docs/language/settings/backends/index.html) для Terraform:  
    а. Рекомендуемый вариант: S3 bucket в созданном ЯО аккаунте(создание бакета через TF)
-3. Создайте VPC с подсетями в разных зонах доступности.
-4. Убедитесь, что теперь вы можете выполнить команды `terraform destroy` и `terraform apply` без дополнительных ручных действий.
+
+Результаты выполнения:
+
+ * С помощью Terraform создан бакет S3
+  
+   Конфигурационные файлы расположены в директории по ссылке: 
+
+```bash
+ubuntu@instance-20240625-081433:~/netology_diplom_devops/terraform_bucket$ terraform init
+
+Initializing the backend...
+
+Initializing provider plugins...
+- Finding yandex-cloud/yandex versions matching "0.117.0"...
+- Installing yandex-cloud/yandex v0.117.0...
+- Installed yandex-cloud/yandex v0.117.0 (self-signed, key ID E40F590B50BB8E40)
+
+Partner and community providers are signed by their developers.
+If you'd like to know more about provider signing, you can read about it here:
+https://www.terraform.io/docs/cli/plugins/signing.html
+
+Terraform has created a lock file .terraform.lock.hcl to record the provider
+selections it made above. Include this file in your version control repository
+so that Terraform can guarantee to make the same selections by default when
+you run "terraform init" in the future.
+
+Terraform has been successfully initialized!
+
+You may now begin working with Terraform. Try running "terraform plan" to see
+any changes that are required for your infrastructure. All Terraform commands
+should now work.
+
+If you ever set or change modules or backend configuration for Terraform,
+rerun this command to reinitialize your working directory. If you forget, other
+commands will detect it and remind you to do so if necessary.
+```
+
+```bash
+ubuntu@instance-20240625-081433:~/netology_diplom_devops/terraform_bucket$ terraform plan
+
+Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # yandex_iam_service_account.sa will be created
+  + resource "yandex_iam_service_account" "sa" {
+      + created_at = (known after apply)
+      + folder_id  = "b1guke85m20c3oiopip5"
+      + id         = (known after apply)
+      + name       = "dp-sa"
+    }
+
+  # yandex_iam_service_account_static_access_key.sa-static-key will be created
+  + resource "yandex_iam_service_account_static_access_key" "sa-static-key" {
+      + access_key           = (known after apply)
+      + created_at           = (known after apply)
+      + description          = "Static access key for object storage"
+      + encrypted_secret_key = (known after apply)
+      + id                   = (known after apply)
+      + key_fingerprint      = (known after apply)
+      + secret_key           = (sensitive value)
+      + service_account_id   = (known after apply)
+    }
+
+  # yandex_resourcemanager_folder_iam_member.sa-editor will be created
+  + resource "yandex_resourcemanager_folder_iam_member" "sa-editor" {
+      + folder_id = "b1guke85m20c3oiopip5"
+      + id        = (known after apply)
+      + member    = (known after apply)
+      + role      = "storage.editor"
+    }
+
+  # yandex_storage_bucket.bucket will be created
+  + resource "yandex_storage_bucket" "bucket" {
+      + access_key            = (known after apply)
+      + bucket                = "bucket-dp-vmaltsev"
+      + bucket_domain_name    = (known after apply)
+      + default_storage_class = (known after apply)
+      + folder_id             = (known after apply)
+      + force_destroy         = false
+      + id                    = (known after apply)
+      + secret_key            = (sensitive value)
+      + website_domain        = (known after apply)
+      + website_endpoint      = (known after apply)
+    }
+
+Plan: 4 to add, 0 to change, 0 to destroy.
+
+Changes to Outputs:
+  + service_account_access_key = (sensitive value)
+  + service_account_secret_key = (sensitive value)
+
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+Note: You didn't use the -out option to save this plan, so Terraform can't guarantee to take exactly these actions if you run "terraform apply" now.
+```
+
+```bash
+ubuntu@instance-20240625-081433:~/netology_diplom_devops/terraform_bucket$ terraform apply
+
+Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # yandex_iam_service_account.sa will be created
+  + resource "yandex_iam_service_account" "sa" {
+      + created_at = (known after apply)
+      + folder_id  = "b1guke85m20c3oiopip5"
+      + id         = (known after apply)
+      + name       = "dp-sa"
+    }
+
+  # yandex_iam_service_account_static_access_key.sa-static-key will be created
+  + resource "yandex_iam_service_account_static_access_key" "sa-static-key" {
+      + access_key           = (known after apply)
+      + created_at           = (known after apply)
+      + description          = "Static access key for object storage"
+      + encrypted_secret_key = (known after apply)
+      + id                   = (known after apply)
+      + key_fingerprint      = (known after apply)
+      + secret_key           = (sensitive value)
+      + service_account_id   = (known after apply)
+    }
+
+  # yandex_resourcemanager_folder_iam_member.sa-editor will be created
+  + resource "yandex_resourcemanager_folder_iam_member" "sa-editor" {
+      + folder_id = "b1guke85m20c3oiopip5"
+      + id        = (known after apply)
+      + member    = (known after apply)
+      + role      = "storage.editor"
+    }
+
+  # yandex_storage_bucket.bucket will be created
+  + resource "yandex_storage_bucket" "bucket" {
+      + access_key            = (known after apply)
+      + bucket                = "bucket-dp-vmaltsev"
+      + bucket_domain_name    = (known after apply)
+      + default_storage_class = (known after apply)
+      + folder_id             = (known after apply)
+      + force_destroy         = false
+      + id                    = (known after apply)
+      + secret_key            = (sensitive value)
+      + website_domain        = (known after apply)
+      + website_endpoint      = (known after apply)
+    }
+
+Plan: 4 to add, 0 to change, 0 to destroy.
+
+Changes to Outputs:
+  + service_account_access_key = (sensitive value)
+  + service_account_secret_key = (sensitive value)
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+yandex_iam_service_account.sa: Creating...
+yandex_iam_service_account.sa: Creation complete after 5s [id=ajelc1fua53vm52vmobr]
+yandex_resourcemanager_folder_iam_member.sa-editor: Creating...
+yandex_iam_service_account_static_access_key.sa-static-key: Creating...
+yandex_iam_service_account_static_access_key.sa-static-key: Creation complete after 1s [id=ajeh447jsa5qgqbog4ia]
+yandex_storage_bucket.bucket: Creating...
+yandex_resourcemanager_folder_iam_member.sa-editor: Creation complete after 4s [id=b1guke85m20c3oiopip5/storage.editor/serviceAccount:ajelc1fua53vm52vmobr]
+yandex_storage_bucket.bucket: Still creating... [10s elapsed]
+yandex_storage_bucket.bucket: Still creating... [20s elapsed]
+yandex_storage_bucket.bucket: Still creating... [30s elapsed]
+yandex_storage_bucket.bucket: Still creating... [40s elapsed]
+yandex_storage_bucket.bucket: Still creating... [50s elapsed]
+yandex_storage_bucket.bucket: Still creating... [1m0s elapsed]
+yandex_storage_bucket.bucket: Still creating... [1m10s elapsed]
+yandex_storage_bucket.bucket: Still creating... [1m20s elapsed]
+yandex_storage_bucket.bucket: Still creating... [1m30s elapsed]
+yandex_storage_bucket.bucket: Still creating... [1m40s elapsed]
+yandex_storage_bucket.bucket: Still creating... [1m50s elapsed]
+yandex_storage_bucket.bucket: Still creating... [2m0s elapsed]
+yandex_storage_bucket.bucket: Creation complete after 2m6s [id=bucket-dp-vmaltsev]
+
+Apply complete! Resources: 4 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+service_account_access_key = <sensitive>
+service_account_secret_key = <sensitive>
+```
+
+1. Создайте VPC с подсетями в разных зонах доступности.
+2. Убедитесь, что теперь вы можете выполнить команды `terraform destroy` и `terraform apply` без дополнительных ручных действий.
 
 Ожидаемые результаты:
 
