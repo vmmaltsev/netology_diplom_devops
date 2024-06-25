@@ -542,7 +542,7 @@ Apply complete! Resources: 5 added, 0 changed, 0 destroyed.
 
 4. Убедитесь, что теперь вы можете выполнить команды `terraform destroy` и `terraform apply` без дополнительных ручных действий.
 
-   В результате destroy и apply проодит без дополнительных действий.
+   В результате destroy и apply проходит без дополнительных действий.
 
 ```bash
 ubuntu@instance-20240625-081433:~/netology_diplom_devops/terraform_project$ terraform destroy
@@ -770,10 +770,10 @@ Apply complete! Resources: 5 added, 0 changed, 0 destroyed.
 Ожидаемые результаты:
 
 1. Terraform сконфигурирован и создание инфраструктуры посредством Terraform возможно без дополнительных ручных действий.
-   Terraform сконфигурирован
+   * Terraform сконфигурирован
 
 2. Полученная конфигурация инфраструктуры является предварительной, поэтому в ходе дальнейшего выполнения задания возможны изменения.
-   Получена предварительная конфигурация из сети и подсетей во всех зонах доступности
+   * Получена предварительная конфигурация из сети и подсетей во всех зонах доступности
 
 ---
 ### Создание Kubernetes кластера
@@ -783,13 +783,570 @@ Apply complete! Resources: 5 added, 0 changed, 0 destroyed.
 Это можно сделать двумя способами:
 
 1. Рекомендуемый вариант: самостоятельная установка Kubernetes кластера.  
-   а. При помощи Terraform подготовить как минимум 3 виртуальных машины Compute Cloud для создания Kubernetes-кластера. Тип виртуальной машины следует выбрать самостоятельно с учётом требовании к производительности и стоимости. Если в дальнейшем поймете, что необходимо сменить тип инстанса, используйте Terraform для внесения изменений.  
-   б. Подготовить [ansible](https://www.ansible.com/) конфигурации, можно воспользоваться, например [Kubespray](https://kubernetes.io/docs/setup/production-environment/tools/kubespray/)  
+   а. При помощи Terraform подготовить как минимум 3 виртуальных машины Compute Cloud для создания Kubernetes-кластера. Тип виртуальной машины следует выбрать самостоятельно с учётом требовании к производительности и стоимости. Если в дальнейшем поймете, что необходимо сменить тип инстанса, используйте Terraform для внесения изменений.
+
+   В предыдущей части задания была создана виртуальная сеть, в рамках выполнения этой части конфигурационные файлы будут дополнены для создания 3 виртуальных машин.
+   Конфигурационные файлы расположены в директории по ссылке: https://github.com/vmmaltsev/netology_diplom_devops/tree/main/terraform_project
+
+```bash
+ubuntu@instance-20240625-081433:~/netology_diplom_devops/terraform_project$ terraform plan
+yandex_vpc_network.netology_diplom: Refreshing state... [id=enpm3e7mp0alc2v079b9]
+yandex_vpc_subnet.subnet_c: Refreshing state... [id=b0cn7s1mjcltcqjgeusa]
+yandex_vpc_subnet.subnet_d: Refreshing state... [id=fl8j2p6r9i7m28lvru14]
+yandex_vpc_subnet.subnet_b: Refreshing state... [id=e2ld7je9e0fhgrvgf4f7]
+yandex_vpc_subnet.subnet_a: Refreshing state... [id=e9b11it1nfb2063agnml]
+
+Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # yandex_compute_instance.cp will be created
+  + resource "yandex_compute_instance" "cp" {
+      + created_at                = (known after apply)
+      + description               = "Control plane instance"
+      + folder_id                 = (known after apply)
+      + fqdn                      = (known after apply)
+      + gpu_cluster_id            = (known after apply)
+      + hostname                  = (known after apply)
+      + id                        = (known after apply)
+      + maintenance_grace_period  = (known after apply)
+      + maintenance_policy        = (known after apply)
+      + metadata                  = {
+          + "user-data" = <<-EOT
+                #cloud-config
+                users:
+                  - name: admin
+                    groups: sudo
+                    shell: /bin/bash
+                    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+                    ssh_authorized_keys:
+                      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOriuzKlzfyHw5AcDjeMGPaakLMN/YT6a4e+Uad+4Wq5 ubuntu@instance-20240625-081433
+            EOT
+        }
+      + name                      = "control"
+      + network_acceleration_type = "standard"
+      + platform_id               = "standard-v1"
+      + service_account_id        = (known after apply)
+      + status                    = (known after apply)
+      + zone                      = "ru-central1-a"
+
+      + boot_disk {
+          + auto_delete = true
+          + device_name = (known after apply)
+          + disk_id     = (known after apply)
+          + mode        = (known after apply)
+
+          + initialize_params {
+              + block_size  = (known after apply)
+              + description = (known after apply)
+              + image_id    = "fd8idq8k33m9hlj0huli"
+              + name        = (known after apply)
+              + size        = 20
+              + snapshot_id = (known after apply)
+              + type        = "network-hdd"
+            }
+        }
+
+      + network_interface {
+          + index              = (known after apply)
+          + ip_address         = (known after apply)
+          + ipv4               = true
+          + ipv6               = (known after apply)
+          + ipv6_address       = (known after apply)
+          + mac_address        = (known after apply)
+          + nat                = true
+          + nat_ip_address     = (known after apply)
+          + nat_ip_version     = (known after apply)
+          + security_group_ids = (known after apply)
+          + subnet_id          = "e9b11it1nfb2063agnml"
+        }
+
+      + resources {
+          + core_fraction = 100
+          + cores         = 2
+          + memory        = 2
+        }
+    }
+
+  # yandex_compute_instance.node1 will be created
+  + resource "yandex_compute_instance" "node1" {
+      + created_at                = (known after apply)
+      + description               = "Worker node 1"
+      + folder_id                 = (known after apply)
+      + fqdn                      = (known after apply)
+      + gpu_cluster_id            = (known after apply)
+      + hostname                  = (known after apply)
+      + id                        = (known after apply)
+      + maintenance_grace_period  = (known after apply)
+      + maintenance_policy        = (known after apply)
+      + metadata                  = {
+          + "user-data" = <<-EOT
+                #cloud-config
+                users:
+                  - name: admin
+                    groups: sudo
+                    shell: /bin/bash
+                    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+                    ssh_authorized_keys:
+                      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOriuzKlzfyHw5AcDjeMGPaakLMN/YT6a4e+Uad+4Wq5 ubuntu@instance-20240625-081433
+            EOT
+        }
+      + name                      = "workernode1"
+      + network_acceleration_type = "standard"
+      + platform_id               = "standard-v1"
+      + service_account_id        = (known after apply)
+      + status                    = (known after apply)
+      + zone                      = "ru-central1-b"
+
+      + boot_disk {
+          + auto_delete = true
+          + device_name = (known after apply)
+          + disk_id     = (known after apply)
+          + mode        = (known after apply)
+
+          + initialize_params {
+              + block_size  = (known after apply)
+              + description = (known after apply)
+              + image_id    = "fd8idq8k33m9hlj0huli"
+              + name        = (known after apply)
+              + size        = 15
+              + snapshot_id = (known after apply)
+              + type        = "network-hdd"
+            }
+        }
+
+      + network_interface {
+          + index              = (known after apply)
+          + ip_address         = (known after apply)
+          + ipv4               = true
+          + ipv6               = (known after apply)
+          + ipv6_address       = (known after apply)
+          + mac_address        = (known after apply)
+          + nat                = true
+          + nat_ip_address     = (known after apply)
+          + nat_ip_version     = (known after apply)
+          + security_group_ids = (known after apply)
+          + subnet_id          = "e2ld7je9e0fhgrvgf4f7"
+        }
+
+      + resources {
+          + core_fraction = 100
+          + cores         = 2
+          + memory        = 2
+        }
+
+      + scheduling_policy {
+          + preemptible = true
+        }
+    }
+
+  # yandex_compute_instance.node2 will be created
+  + resource "yandex_compute_instance" "node2" {
+      + created_at                = (known after apply)
+      + description               = "Worker node 2"
+      + folder_id                 = (known after apply)
+      + fqdn                      = (known after apply)
+      + gpu_cluster_id            = (known after apply)
+      + hostname                  = (known after apply)
+      + id                        = (known after apply)
+      + maintenance_grace_period  = (known after apply)
+      + maintenance_policy        = (known after apply)
+      + metadata                  = {
+          + "user-data" = <<-EOT
+                #cloud-config
+                users:
+                  - name: admin
+                    groups: sudo
+                    shell: /bin/bash
+                    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+                    ssh_authorized_keys:
+                      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOriuzKlzfyHw5AcDjeMGPaakLMN/YT6a4e+Uad+4Wq5 ubuntu@instance-20240625-081433
+            EOT
+        }
+      + name                      = "workernode2"
+      + network_acceleration_type = "standard"
+      + platform_id               = "standard-v2"
+      + service_account_id        = (known after apply)
+      + status                    = (known after apply)
+      + zone                      = "ru-central1-d"
+
+      + boot_disk {
+          + auto_delete = true
+          + device_name = (known after apply)
+          + disk_id     = (known after apply)
+          + mode        = (known after apply)
+
+          + initialize_params {
+              + block_size  = (known after apply)
+              + description = (known after apply)
+              + image_id    = "fd8idq8k33m9hlj0huli"
+              + name        = (known after apply)
+              + size        = 15
+              + snapshot_id = (known after apply)
+              + type        = "network-hdd"
+            }
+        }
+
+      + network_interface {
+          + index              = (known after apply)
+          + ip_address         = (known after apply)
+          + ipv4               = true
+          + ipv6               = (known after apply)
+          + ipv6_address       = (known after apply)
+          + mac_address        = (known after apply)
+          + nat                = true
+          + nat_ip_address     = (known after apply)
+          + nat_ip_version     = (known after apply)
+          + security_group_ids = (known after apply)
+          + subnet_id          = "fl8j2p6r9i7m28lvru14"
+        }
+
+      + resources {
+          + core_fraction = 100
+          + cores         = 2
+          + memory        = 2
+        }
+
+      + scheduling_policy {
+          + preemptible = true
+        }
+    }
+
+Plan: 3 to add, 0 to change, 0 to destroy.
+
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+Note: You didn't use the -out option to save this plan, so Terraform can't guarantee to take exactly these actions if you run "terraform apply" now.
+```
+
+```bash
+ubuntu@instance-20240625-081433:~/netology_diplom_devops/terraform_project$ terraform apply
+yandex_vpc_network.netology_diplom: Refreshing state... [id=enpm3e7mp0alc2v079b9]
+yandex_vpc_subnet.subnet_d: Refreshing state... [id=fl8j2p6r9i7m28lvru14]
+yandex_vpc_subnet.subnet_a: Refreshing state... [id=e9b11it1nfb2063agnml]
+yandex_vpc_subnet.subnet_c: Refreshing state... [id=b0cn7s1mjcltcqjgeusa]
+yandex_vpc_subnet.subnet_b: Refreshing state... [id=e2ld7je9e0fhgrvgf4f7]
+
+Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # yandex_compute_instance.cp will be created
+  + resource "yandex_compute_instance" "cp" {
+      + created_at                = (known after apply)
+      + description               = "Control plane instance"
+      + folder_id                 = (known after apply)
+      + fqdn                      = (known after apply)
+      + gpu_cluster_id            = (known after apply)
+      + hostname                  = (known after apply)
+      + id                        = (known after apply)
+      + maintenance_grace_period  = (known after apply)
+      + maintenance_policy        = (known after apply)
+      + metadata                  = {
+          + "user-data" = <<-EOT
+                #cloud-config
+                users:
+                  - name: admin
+                    groups: sudo
+                    shell: /bin/bash
+                    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+                    ssh_authorized_keys:
+                      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOriuzKlzfyHw5AcDjeMGPaakLMN/YT6a4e+Uad+4Wq5 ubuntu@instance-20240625-081433
+            EOT
+        }
+      + name                      = "control"
+      + network_acceleration_type = "standard"
+      + platform_id               = "standard-v1"
+      + service_account_id        = (known after apply)
+      + status                    = (known after apply)
+      + zone                      = "ru-central1-a"
+
+      + boot_disk {
+          + auto_delete = true
+          + device_name = (known after apply)
+          + disk_id     = (known after apply)
+          + mode        = (known after apply)
+
+          + initialize_params {
+              + block_size  = (known after apply)
+              + description = (known after apply)
+              + image_id    = "fd8idq8k33m9hlj0huli"
+              + name        = (known after apply)
+              + size        = 20
+              + snapshot_id = (known after apply)
+              + type        = "network-hdd"
+            }
+        }
+
+      + network_interface {
+          + index              = (known after apply)
+          + ip_address         = (known after apply)
+          + ipv4               = true
+          + ipv6               = (known after apply)
+          + ipv6_address       = (known after apply)
+          + mac_address        = (known after apply)
+          + nat                = true
+          + nat_ip_address     = (known after apply)
+          + nat_ip_version     = (known after apply)
+          + security_group_ids = (known after apply)
+          + subnet_id          = "e9b11it1nfb2063agnml"
+        }
+
+      + resources {
+          + core_fraction = 100
+          + cores         = 2
+          + memory        = 2
+        }
+    }
+
+  # yandex_compute_instance.node1 will be created
+  + resource "yandex_compute_instance" "node1" {
+      + created_at                = (known after apply)
+      + description               = "Worker node 1"
+      + folder_id                 = (known after apply)
+      + fqdn                      = (known after apply)
+      + gpu_cluster_id            = (known after apply)
+      + hostname                  = (known after apply)
+      + id                        = (known after apply)
+      + maintenance_grace_period  = (known after apply)
+      + maintenance_policy        = (known after apply)
+      + metadata                  = {
+          + "user-data" = <<-EOT
+                #cloud-config
+                users:
+                  - name: admin
+                    groups: sudo
+                    shell: /bin/bash
+                    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+                    ssh_authorized_keys:
+                      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOriuzKlzfyHw5AcDjeMGPaakLMN/YT6a4e+Uad+4Wq5 ubuntu@instance-20240625-081433
+            EOT
+        }
+      + name                      = "workernode1"
+      + network_acceleration_type = "standard"
+      + platform_id               = "standard-v1"
+      + service_account_id        = (known after apply)
+      + status                    = (known after apply)
+      + zone                      = "ru-central1-b"
+
+      + boot_disk {
+          + auto_delete = true
+          + device_name = (known after apply)
+          + disk_id     = (known after apply)
+          + mode        = (known after apply)
+
+          + initialize_params {
+              + block_size  = (known after apply)
+              + description = (known after apply)
+              + image_id    = "fd8idq8k33m9hlj0huli"
+              + name        = (known after apply)
+              + size        = 15
+              + snapshot_id = (known after apply)
+              + type        = "network-hdd"
+            }
+        }
+
+      + network_interface {
+          + index              = (known after apply)
+          + ip_address         = (known after apply)
+          + ipv4               = true
+          + ipv6               = (known after apply)
+          + ipv6_address       = (known after apply)
+          + mac_address        = (known after apply)
+          + nat                = true
+          + nat_ip_address     = (known after apply)
+          + nat_ip_version     = (known after apply)
+          + security_group_ids = (known after apply)
+          + subnet_id          = "e2ld7je9e0fhgrvgf4f7"
+        }
+
+      + resources {
+          + core_fraction = 100
+          + cores         = 2
+          + memory        = 2
+        }
+
+      + scheduling_policy {
+          + preemptible = true
+        }
+    }
+
+  # yandex_compute_instance.node2 will be created
+  + resource "yandex_compute_instance" "node2" {
+      + created_at                = (known after apply)
+      + description               = "Worker node 2"
+      + folder_id                 = (known after apply)
+      + fqdn                      = (known after apply)
+      + gpu_cluster_id            = (known after apply)
+      + hostname                  = (known after apply)
+      + id                        = (known after apply)
+      + maintenance_grace_period  = (known after apply)
+      + maintenance_policy        = (known after apply)
+      + metadata                  = {
+          + "user-data" = <<-EOT
+                #cloud-config
+                users:
+                  - name: admin
+                    groups: sudo
+                    shell: /bin/bash
+                    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+                    ssh_authorized_keys:
+                      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOriuzKlzfyHw5AcDjeMGPaakLMN/YT6a4e+Uad+4Wq5 ubuntu@instance-20240625-081433
+            EOT
+        }
+      + name                      = "workernode2"
+      + network_acceleration_type = "standard"
+      + platform_id               = "standard-v2"
+      + service_account_id        = (known after apply)
+      + status                    = (known after apply)
+      + zone                      = "ru-central1-d"
+
+      + boot_disk {
+          + auto_delete = true
+          + device_name = (known after apply)
+          + disk_id     = (known after apply)
+          + mode        = (known after apply)
+
+          + initialize_params {
+              + block_size  = (known after apply)
+              + description = (known after apply)
+              + image_id    = "fd8idq8k33m9hlj0huli"
+              + name        = (known after apply)
+              + size        = 15
+              + snapshot_id = (known after apply)
+              + type        = "network-hdd"
+            }
+        }
+
+      + network_interface {
+          + index              = (known after apply)
+          + ip_address         = (known after apply)
+          + ipv4               = true
+          + ipv6               = (known after apply)
+          + ipv6_address       = (known after apply)
+          + mac_address        = (known after apply)
+          + nat                = true
+          + nat_ip_address     = (known after apply)
+          + nat_ip_version     = (known after apply)
+          + security_group_ids = (known after apply)
+          + subnet_id          = "fl8j2p6r9i7m28lvru14"
+        }
+
+      + resources {
+          + core_fraction = 100
+          + cores         = 2
+          + memory        = 2
+        }
+
+      + scheduling_policy {
+          + preemptible = true
+        }
+    }
+
+Plan: 3 to add, 0 to change, 0 to destroy.
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+yandex_compute_instance.node1: Creating...
+yandex_compute_instance.node2: Creating...
+yandex_compute_instance.cp: Creating...
+yandex_compute_instance.node1: Still creating... [10s elapsed]
+yandex_compute_instance.node2: Still creating... [10s elapsed]
+yandex_compute_instance.cp: Still creating... [10s elapsed]
+yandex_compute_instance.node1: Still creating... [20s elapsed]
+yandex_compute_instance.node2: Still creating... [20s elapsed]
+yandex_compute_instance.cp: Still creating... [20s elapsed]
+yandex_compute_instance.node1: Still creating... [30s elapsed]
+yandex_compute_instance.node2: Still creating... [30s elapsed]
+yandex_compute_instance.cp: Still creating... [30s elapsed]
+yandex_compute_instance.node1: Still creating... [40s elapsed]
+yandex_compute_instance.node2: Still creating... [40s elapsed]
+yandex_compute_instance.cp: Still creating... [40s elapsed]
+yandex_compute_instance.node1: Creation complete after 44s [id=epdbvrpi63v5og6ud6dp]
+yandex_compute_instance.cp: Creation complete after 45s [id=fhmsmisbjlpc2blpoho6]
+yandex_compute_instance.node2: Still creating... [50s elapsed]
+yandex_compute_instance.node2: Creation complete after 51s [id=fv4s7u8vs9jvmpvv0sv7]
+
+Apply complete! Resources: 3 added, 0 changed, 0 destroyed.
+```
+
+```bash
+ubuntu@instance-20240625-081433:~/netology_diplom_devops/terraform_project$ terraform plan
+yandex_vpc_network.netology_diplom: Refreshing state... [id=enpm3e7mp0alc2v079b9]
+yandex_vpc_subnet.subnet_a: Refreshing state... [id=e9b11it1nfb2063agnml]
+yandex_vpc_subnet.subnet_b: Refreshing state... [id=e2ld7je9e0fhgrvgf4f7]
+yandex_vpc_subnet.subnet_d: Refreshing state... [id=fl8j2p6r9i7m28lvru14]
+yandex_vpc_subnet.subnet_c: Refreshing state... [id=b0cn7s1mjcltcqjgeusa]
+yandex_compute_instance.node1: Refreshing state... [id=epdbvrpi63v5og6ud6dp]
+yandex_compute_instance.cp: Refreshing state... [id=fhmsmisbjlpc2blpoho6]
+yandex_compute_instance.node2: Refreshing state... [id=fv4s7u8vs9jvmpvv0sv7]
+
+Changes to Outputs:
+  + cp_external_ip    = "178.154.204.61"
+  + cp_internal_ip    = "10.10.1.10"
+  + node1_external_ip = "158.160.66.183"
+  + node1_internal_ip = "10.10.2.31"
+  + node2_external_ip = "158.160.137.231"
+  + node2_internal_ip = "10.10.4.27"
+
+You can apply this plan to save these new output values to the Terraform state, without changing any real infrastructure.
+
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+Note: You didn't use the -out option to save this plan, so Terraform can't guarantee to take exactly these actions if you run "terraform apply" now.
+```
+
+```bash
+ubuntu@instance-20240625-081433:~/netology_diplom_devops/terraform_project$ terraform apply
+yandex_vpc_network.netology_diplom: Refreshing state... [id=enpm3e7mp0alc2v079b9]
+yandex_vpc_subnet.subnet_a: Refreshing state... [id=e9b11it1nfb2063agnml]
+yandex_vpc_subnet.subnet_c: Refreshing state... [id=b0cn7s1mjcltcqjgeusa]
+yandex_vpc_subnet.subnet_d: Refreshing state... [id=fl8j2p6r9i7m28lvru14]
+yandex_vpc_subnet.subnet_b: Refreshing state... [id=e2ld7je9e0fhgrvgf4f7]
+yandex_compute_instance.cp: Refreshing state... [id=fhmsmisbjlpc2blpoho6]
+yandex_compute_instance.node2: Refreshing state... [id=fv4s7u8vs9jvmpvv0sv7]
+yandex_compute_instance.node1: Refreshing state... [id=epdbvrpi63v5og6ud6dp]
+
+Changes to Outputs:
+  + cp_external_ip    = "178.154.204.61"
+  + cp_internal_ip    = "10.10.1.10"
+  + node1_external_ip = "158.160.66.183"
+  + node1_internal_ip = "10.10.2.31"
+  + node2_external_ip = "158.160.137.231"
+  + node2_internal_ip = "10.10.4.27"
+
+You can apply this plan to save these new output values to the Terraform state, without changing any real infrastructure.
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+
+Apply complete! Resources: 0 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+cp_external_ip = "178.154.204.61"
+cp_internal_ip = "10.10.1.10"
+node1_external_ip = "158.160.66.183"
+node1_internal_ip = "10.10.2.31"
+node2_external_ip = "158.160.137.231"
+node2_internal_ip = "10.10.4.27"
+```
+
+   б. Подготовить [ansible](https://www.ansible.com/) конфигурации, можно воспользоваться, например [Kubespray](https://kubernetes.io/docs/setup/production-environment/tools/kubespray/) 
+
+
    в. Задеплоить Kubernetes на подготовленные ранее инстансы, в случае нехватки каких-либо ресурсов вы всегда можете создать их при помощи Terraform.
-2. Альтернативный вариант: воспользуйтесь сервисом [Yandex Managed Service for Kubernetes](https://cloud.yandex.ru/services/managed-kubernetes)  
-  а. С помощью terraform resource для [kubernetes](https://registry.terraform.io/providers/yandex-cloud/yandex/latest/docs/resources/kubernetes_cluster) создать **региональный** мастер kubernetes с размещением нод в разных 3 подсетях      
-  б. С помощью terraform resource для [kubernetes node group](https://registry.terraform.io/providers/yandex-cloud/yandex/latest/docs/resources/kubernetes_node_group)
-  
+
 Ожидаемый результат:
 
 1. Работоспособный Kubernetes кластер.

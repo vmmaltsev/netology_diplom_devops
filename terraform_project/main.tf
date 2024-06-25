@@ -34,3 +34,96 @@ resource "yandex_vpc_subnet" "subnet_d" {
   v4_cidr_blocks = ["10.10.4.0/24"]
   description    = "Subnet D in zone ru-central1-d"
 }
+
+resource "yandex_compute_instance" "cp" {
+  name = "control"
+  zone = "ru-central1-a"
+
+  resources {
+    cores  = 2
+    memory = 2
+  }
+
+  boot_disk {
+    initialize_params {
+      image_id = var.image_id
+      size     = 20
+    }
+  }
+
+  network_interface {
+    subnet_id  = yandex_vpc_subnet.subnet_a.id
+    nat        = true
+  }
+
+  metadata = {
+    user-data = file("meta.txt")
+  }
+
+  description = "Control plane instance"
+}
+
+resource "yandex_compute_instance" "node1" {
+  name = "workernode1"
+  zone = "ru-central1-b"
+
+  resources {
+    cores  = 2
+    memory = 2
+  }
+
+  boot_disk {
+    initialize_params {
+      image_id = var.image_id
+      size     = 15
+    }
+  }
+
+  network_interface {
+    subnet_id  = yandex_vpc_subnet.subnet_b.id
+    nat        = true
+  }
+
+  metadata = {
+    user-data = file("meta.txt")
+  }
+
+  scheduling_policy {
+    preemptible = true
+  }
+
+  description = "Worker node 1"
+}
+
+resource "yandex_compute_instance" "node2" {
+  name        = "workernode2"
+  zone        = "ru-central1-d"
+  platform_id = "standard-v2"
+
+  resources {
+    cores  = 2
+    memory = 2
+  }
+
+  boot_disk {
+    initialize_params {
+      image_id = var.image_id
+      size     = 15
+    }
+  }
+
+  network_interface {
+    subnet_id  = yandex_vpc_subnet.subnet_d.id
+    nat        = true
+  }
+
+  metadata = {
+    user-data = file("meta.txt")
+  }
+
+  scheduling_policy {
+    preemptible = true
+  }
+
+  description = "Worker node 2"
+}
