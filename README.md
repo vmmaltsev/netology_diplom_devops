@@ -7,6 +7,7 @@
     - [Создание тестового приложения](#создание-тестового-приложения)
     - [Подготовка cистемы мониторинга и деплой приложения](#подготовка-cистемы-мониторинга-и-деплой-приложения)
     - [Установка и настройка CI/CD](#установка-и-настройка-cicd)
+  - [Приложение в репозитории https://github.com/vmmaltsev/app-test](#приложение-в-репозитории-httpsgithubcomvmmaltsevapp-test)
   - [Что необходимо для сдачи задания?](#что-необходимо-для-сдачи-задания)
 
 ---
@@ -1919,7 +1920,6 @@ deployment.apps/stable-kube-prometheus-sta-operator   1/1     1            1    
 deployment.apps/stable-kube-state-metrics             1/1     1            1           24m
 ```
 
-
 ---
 ### Установка и настройка CI/CD
 
@@ -1930,7 +1930,19 @@ deployment.apps/stable-kube-state-metrics             1/1     1            1    
 1. Автоматическая сборка docker образа при коммите в репозиторий с тестовым приложением.
 2. Автоматический деплой нового docker образа.
 
-Можно использовать [teamcity](https://www.jetbrains.com/ru-ru/teamcity/), [jenkins](https://www.jenkins.io/), [GitLab CI](https://about.gitlab.com/stages-devops-lifecycle/continuous-integration/) или GitHub Actions.
+Для автоматической сборки docker image и деплоя приложения при изменении кода буду использовать Github actions
+
+Для работы ci-cd в github action требуются учетные данные.
+
+Поэтому создаем в Dockerhub секретный токен.
+
+Затем создаем в github секреты для доступа к DockerHub.
+
+KUBE_CONFIG_DATA
+
+DOCKERHUB_TOKEN
+
+DOCKERHUB_USERNAME
 
 Ожидаемый результат:
 
@@ -1938,6 +1950,17 @@ deployment.apps/stable-kube-state-metrics             1/1     1            1    
 2. При любом коммите в репозиторие с тестовым приложением происходит сборка и отправка в регистр Docker образа.
 3. При создании тега (например, v1.0.0) происходит сборка и отправка с соответствующим label в регистри, а также деплой соответствующего Docker образа в кластер Kubernetes.
 
+![alt text](https://github.com/vmmaltsev/diplom_PNG/blob/main/Screenshot_3.png)
+
+![alt text](https://github.com/vmmaltsev/diplom_PNG/blob/main/Screenshot_4.png)
+
+![alt text](https://github.com/vmmaltsev/diplom_PNG/blob/main/Screenshot_5.png)
+
+![alt text](https://github.com/vmmaltsev/diplom_PNG/blob/main/Screenshot_6.png)
+
+![alt text](https://github.com/vmmaltsev/diplom_PNG/blob/main/Screenshot_7.png)
+
+Приложение в репозитории https://github.com/vmmaltsev/app-test
 ---
 ## Что необходимо для сдачи задания?
 
