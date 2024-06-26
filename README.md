@@ -1621,13 +1621,146 @@ node2   Ready    <none>          27m   v1.29.5
 1. Рекомендуемый вариант:  
    а. Создайте отдельный git репозиторий с простым nginx конфигом, который будет отдавать статические данные.  
    б. Подготовьте Dockerfile для создания образа приложения.  
-2. Альтернативный вариант:  
-   а. Используйте любой другой код, главное, чтобы был самостоятельно создан Dockerfile.
+
+Создаём каталог app и подкаталоги conf и content:
+```bash
+mkdir -p ~/app/{conf,content} && cd ~/app/
+```
+
+В каталоге app создаём Dockerfile:
+
+```bash
+FROM nginx:latest
+
+# Configuration
+ADD conf /etc/nginx
+# Content
+ADD content /usr/share/nginx/html
+
+EXPOSE 80
+
+```
+
+Также создаём файл ~/app/conf/nginx.conf с конфигурацией nginx:
+
+```bash
+user nginx;
+worker_processes 1;
+error_log /var/log/nginx/error.log warn;
+
+events {
+    worker_connections 1024;
+    multi_accept on;
+}
+
+http {
+    server {
+        listen   80;
+
+        location / {
+            gzip off;
+            root /usr/share/nginx/html/;
+            index index.html;
+        }
+    }
+    keepalive_timeout  65;
+}
+
+```
+
+Cоздаём статическую страницу нашего приложения:
+
+```bash
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Netology Diplom DevOps Project by vmaltsev">
+    <title>netology_diplom_devops - vmaltsev</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <main>
+        <h2 class="centered">netology_diplom_devops - vmaltsev</h2>
+    </main>
+</body>
+
+</html>
+
+```
+
+Создаем образ:
+
+```bash
+ubuntu@instance-20240625-081433:~/app$ sudo docker build -t maltsevvm/nginx-static-app .
+DEPRECATED: The legacy builder is deprecated and will be removed in a future release.
+            Install the buildx component to build images with BuildKit:
+            https://docs.docker.com/go/buildx/
+
+Sending build context to Docker daemon  72.19kB
+Step 1/5 : FROM nginx:latest
+ ---> e0c9858e10ed
+Step 2/5 : COPY conf /etc/nginx
+ ---> Using cache
+ ---> f34b942494ad
+Step 3/5 : COPY content /usr/share/nginx/html
+ ---> Using cache
+ ---> fe890d2070ae
+Step 4/5 : HEALTHCHECK --interval=30s --timeout=10s --retries=3 CMD curl -f http://localhost/ || exit 1
+ ---> Using cache
+ ---> 946028a0beb2
+Step 5/5 : EXPOSE 80
+ ---> Using cache
+ ---> 58f29cb81071
+Successfully built 58f29cb81071
+Successfully tagged maltsevvm/nginx-static-app:latest
+```
+
+Для проверки запускаем:
+
+```bash
+ubuntu@instance-20240625-081433:~/app$ sudo docker run -d --name app -p80:80 maltsevvm/nginx-static-app:latest
+32ae588e37cbb6fb266f9a14f1b033f19d3c7b28c0ac25b35885c071bd2d8f38
+ubuntu@instance-20240625-081433:~/app$ sudo docker ps
+CONTAINER ID   IMAGE                               COMMAND                  CREATED         STATUS                            PORTS                               NAMES
+32ae588e37cb   maltsevvm/nginx-static-app:latest   "/docker-entrypoint.…"   6 seconds ago   Up 4 seconds (health: starting)   0.0.0.0:80->80/tcp, :::80->80/tcp   app
+```
+
+При проброске 80 порта, сайт открывается на 80 порту localhost.
+
+Так как образ собран усппншно и работает необходимо его отправить в docker hub.
+
+```bash
+ubuntu@instance-20240625-081433:~/app$ sudo docker push maltsevvm/nginx-static-app:latest
+The push refers to repository [docker.io/maltsevvm/nginx-static-app]
+b2975f59d34a: Pushed 
+eb7dd4dc72a7: Pushed 
+3cf30c944fca: Mounted from library/nginx 
+16d40ad06803: Mounted from library/nginx 
+cf1614267117: Mounted from library/nginx 
+e5ec4dd3995c: Mounted from library/nginx 
+e8186e892c11: Mounted from library/nginx 
+a9a1ca1cae25: Mounted from library/nginx 
+1387079e86ad: Mounted from library/nginx 
+latest: digest: sha256:57d03fbd2f2712f25b801ffdd3f8bd087cd509e3401ed76a59f9682ce42e2f08 size: 2192
+```
 
 Ожидаемый результат:
 
 1. Git репозиторий с тестовым приложением и Dockerfile.
+   
+https://github.com/vmmaltsev/app-test.git
+
 2. Регистри с собранным docker image. В качестве регистри может быть DockerHub или [Yandex Container Registry](https://cloud.yandex.ru/services/container-registry), созданный также с помощью terraform.
+
+```bash
+docker pull maltsevvm/nginx-static-app
+
+docker pull maltsevvm/nginx-static-app:latest
+```
 
 ---
 ### Подготовка cистемы мониторинга и деплой приложения
@@ -1646,9 +1779,146 @@ node2   Ready    <none>          27m   v1.29.5
 
 Ожидаемый результат:
 1. Git репозиторий с конфигурационными файлами для настройки Kubernetes.
+
+Кластер prometheus, grafana, alertmanager, экспортер основных метрик Kubernetes задеплоил с помощью helm charts
+
+Подготовка cистемы мониторинга
+
+```bash
+ubuntu@instance-20240625-081433:~$ ./get_helm.sh
+Downloading https://get.helm.sh/helm-v3.15.2-linux-amd64.tar.gz
+Verifying checksum... Done.
+Preparing to install helm into /usr/local/bin
+helm installed into /usr/local/bin/helm
+ubuntu@instance-20240625-081433:~$ kubectl create namespace monitoring
+namespace/monitoring created
+ubuntu@instance-20240625-081433:~$ helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+WARNING: Kubernetes configuration file is group-readable. This is insecure. Location: /home/ubuntu/.kube/config
+WARNING: Kubernetes configuration file is world-readable. This is insecure. Location: /home/ubuntu/.kube/config
+"prometheus-community" has been added to your repositories
+ubuntu@instance-20240625-081433:~$ helm repo update
+WARNING: Kubernetes configuration file is group-readable. This is insecure. Location: /home/ubuntu/.kube/config
+WARNING: Kubernetes configuration file is world-readable. This is insecure. Location: /home/ubuntu/.kube/config
+Hang tight while we grab the latest from your chart repositories...
+...Successfully got an update from the "prometheus-community" chart repository
+Update Complete. ⎈Happy Helming!⎈
+ubuntu@instance-20240625-081433:~$ helm install stable prometheus-community/kube-prometheus-stack --namespace=monitoring
+WARNING: Kubernetes configuration file is group-readable. This is insecure. Location: /home/ubuntu/.kube/config
+WARNING: Kubernetes configuration file is world-readable. This is insecure. Location: /home/ubuntu/.kube/config
+NAME: stable
+LAST DEPLOYED: Wed Jun 26 05:09:31 2024
+NAMESPACE: monitoring
+STATUS: deployed
+REVISION: 1
+NOTES:
+kube-prometheus-stack has been installed. Check its status by running:
+  kubectl --namespace monitoring get pods -l "release=stable"
+
+Visit https://github.com/prometheus-operator/kube-prometheus for instructions on how to create & configure Alertmanager and Prometheus instances using the Operator.
+```
+
+```bash
+ubuntu@instance-20240625-081433:~$ kubectl get all -n monitoring
+NAME                                                         READY   STATUS    RESTARTS   AGE
+pod/alertmanager-stable-kube-prometheus-sta-alertmanager-0   2/2     Running   0          61s
+pod/prometheus-stable-kube-prometheus-sta-prometheus-0       2/2     Running   0          61s
+pod/stable-grafana-785b7999d-6z2s4                           3/3     Running   0          87s
+pod/stable-kube-prometheus-sta-operator-6ff9c6d76f-m6d8q     1/1     Running   0          87s
+pod/stable-kube-state-metrics-9bc86f55-scltv                 1/1     Running   0          87s
+pod/stable-prometheus-node-exporter-7shcq                    1/1     Running   0          87s
+pod/stable-prometheus-node-exporter-9hnwp                    1/1     Running   0          87s
+pod/stable-prometheus-node-exporter-p89wd                    1/1     Running   0          87s
+
+NAME                                              TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)                      AGE
+service/alertmanager-operated                     ClusterIP   None            <none>        9093/TCP,9094/TCP,9094/UDP   62s
+service/prometheus-operated                       ClusterIP   None            <none>        9090/TCP                     61s
+service/stable-grafana                            ClusterIP   10.233.21.86    <none>        80/TCP                       88s
+service/stable-kube-prometheus-sta-alertmanager   ClusterIP   10.233.44.237   <none>        9093/TCP,8080/TCP            88s
+service/stable-kube-prometheus-sta-operator       ClusterIP   10.233.3.43     <none>        443/TCP                      88s
+service/stable-kube-prometheus-sta-prometheus     ClusterIP   10.233.8.192    <none>        9090/TCP,8080/TCP            88s
+service/stable-kube-state-metrics                 ClusterIP   10.233.10.153   <none>        8080/TCP                     88s
+service/stable-prometheus-node-exporter           ClusterIP   10.233.28.251   <none>        9100/TCP                     88s
+
+NAME                                             DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR            AGE
+daemonset.apps/stable-prometheus-node-exporter   3         3         3       3            3           kubernetes.io/os=linux   89s
+
+NAME                                                  READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/stable-grafana                        1/1     1            1           88s
+deployment.apps/stable-kube-prometheus-sta-operator   1/1     1            1           88s
+deployment.apps/stable-kube-state-metrics             1/1     1            1           88s
+
+NAME                                                             DESIRED   CURRENT   READY   AGE
+replicaset.apps/stable-grafana-785b7999d                         1         1         1       88s
+replicaset.apps/stable-kube-prometheus-sta-operator-6ff9c6d76f   1         1         1       88s
+replicaset.apps/stable-kube-state-metrics-9bc86f55               1         1         1       88s
+
+NAME                                                                    READY   AGE
+statefulset.apps/alertmanager-stable-kube-prometheus-sta-alertmanager   1/1     63s
+statefulset.apps/prometheus-stable-kube-prometheus-sta-prometheus       1/1     62s
+```
+
 2. Http доступ к web интерфейсу grafana.
+
+Чтобы подключаться к мониторингу извне нужно перенастроить сервисы(svc) созданные для kube-prometheus-stack.
+
+```bash
+ubuntu@instance-20240625-081433:~$ kubectl edit svc stable-kube-prometheus-sta-prometheus -n monitoring
+service/stable-kube-prometheus-sta-prometheus edited
+ubuntu@instance-20240625-081433:~$ kubectl edit svc stable-grafana -n monitoring
+service/stable-grafana edited
+ubuntu@instance-20240625-081433:~$ kubectl get svc -n monitoring
+NAME                                      TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)                         AGE
+alertmanager-operated                     ClusterIP   None            <none>        9093/TCP,9094/TCP,9094/UDP      7m10s
+prometheus-operated                       ClusterIP   None            <none>        9090/TCP                        7m9s
+stable-grafana                            NodePort    10.233.21.86    <none>        80:31085/TCP                    7m36s
+stable-kube-prometheus-sta-alertmanager   ClusterIP   10.233.44.237   <none>        9093/TCP,8080/TCP               7m36s
+stable-kube-prometheus-sta-operator       ClusterIP   10.233.3.43     <none>        443/TCP                         7m36s
+stable-kube-prometheus-sta-prometheus     NodePort    10.233.8.192    <none>        9090:32009/TCP,8080:32590/TCP   7m36s
+stable-kube-state-metrics                 ClusterIP   10.233.10.153   <none>        8080/TCP                        7m36s
+stable-prometheus-node-exporter           ClusterIP   10.233.28.251   <none>        9100/TCP                        7m36s
+```
+
+![alt text](https://github.com/vmmaltsev/diplom_PNG/blob/main/Screenshot_26.png)
+
 3. Дашборды в grafana отображающие состояние Kubernetes кластера.
+
+![alt text](https://github.com/vmmaltsev/diplom_PNG/blob/main/Screenshot_1.png)
+
 4. Http доступ к тестовому приложению.
+
+![alt text](https://github.com/vmmaltsev/diplom_PNG/blob/main/Screenshot_2.png)
+
+```bash
+ubuntu@instance-20240625-081433:~$ kubectl get pods,svc,deployment  -n monitoring
+NAME                                                         READY   STATUS    RESTARTS   AGE
+pod/alertmanager-stable-kube-prometheus-sta-alertmanager-0   2/2     Running   0          23m
+pod/myapp-68c94cb5f8-sfkfm                                   1/1     Running   0          36s
+pod/prometheus-stable-kube-prometheus-sta-prometheus-0       2/2     Running   0          23m
+pod/stable-grafana-785b7999d-6z2s4                           3/3     Running   0          24m
+pod/stable-kube-prometheus-sta-operator-6ff9c6d76f-m6d8q     1/1     Running   0          24m
+pod/stable-kube-state-metrics-9bc86f55-scltv                 1/1     Running   0          24m
+pod/stable-prometheus-node-exporter-7shcq                    1/1     Running   0          24m
+pod/stable-prometheus-node-exporter-9hnwp                    1/1     Running   0          24m
+pod/stable-prometheus-node-exporter-p89wd                    1/1     Running   0          24m
+
+NAME                                              TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)                         AGE
+service/alertmanager-operated                     ClusterIP   None            <none>        9093/TCP,9094/TCP,9094/UDP      23m
+service/myapp-service                             NodePort    10.233.46.160   <none>        80:31000/TCP                    15s
+service/prometheus-operated                       ClusterIP   None            <none>        9090/TCP                        23m
+service/stable-grafana                            NodePort    10.233.21.86    <none>        80:31085/TCP                    24m
+service/stable-kube-prometheus-sta-alertmanager   ClusterIP   10.233.44.237   <none>        9093/TCP,8080/TCP               24m
+service/stable-kube-prometheus-sta-operator       ClusterIP   10.233.3.43     <none>        443/TCP                         24m
+service/stable-kube-prometheus-sta-prometheus     NodePort    10.233.8.192    <none>        9090:32009/TCP,8080:32590/TCP   24m
+service/stable-kube-state-metrics                 ClusterIP   10.233.10.153   <none>        8080/TCP                        24m
+service/stable-prometheus-node-exporter           ClusterIP   10.233.28.251   <none>        9100/TCP                        24m
+
+NAME                                                  READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/myapp                                 1/1     1            1           36s
+deployment.apps/stable-grafana                        1/1     1            1           24m
+deployment.apps/stable-kube-prometheus-sta-operator   1/1     1            1           24m
+deployment.apps/stable-kube-state-metrics             1/1     1            1           24m
+```
+
 
 ---
 ### Установка и настройка CI/CD
